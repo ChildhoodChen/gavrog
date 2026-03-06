@@ -269,3 +269,43 @@ A renderer abstraction was introduced in `ViewerFrame` to decouple startup from 
 - OpenGL viewers are created via `org.gavrog.apps._3dt.render.OpenGlBackendAdapter` (no direct legacy JOGL viewer wiring in `ViewerFrame`),
 - screenshot export attempts backend offscreen rendering first and transparently falls back to software offscreen rendering when unavailable,
 - startup diagnostics always log requested renderer, selected renderer, and fallback reason (`none` when no fallback happened), plus backend class/version.
+
+## 64-bit OpenGL validation matrix execution log (updated)
+
+The release-blocking matrix for this migration is now explicitly tracked at the
+OS/arch level requested for OpenGL re-validation:
+
+- Linux x86_64
+- Windows x86_64
+- macOS x86_64
+- macOS arm64
+
+### Non-GUI OpenGL probe entrypoint for CI/release gates
+
+A dedicated non-GUI probe entrypoint is available at:
+
+- `org.gavrog.apps._3dt.RendererProbe`
+
+Behavior:
+
+- exits `0` when an OpenGL backend can be instantiated,
+- exits `2` when OpenGL backend initialization fails,
+- prints backend candidates and initialization failure details.
+
+### Validation run record (startup `--renderer=opengl`, interaction, picking/camera, screenshot/offscreen)
+
+Legend: **PASS** = validated, **FAIL** = validated and failed,
+**UNRESOLVED** = not executable in current environment; treated as release blocker.
+
+| OS | Arch | JDK | Startup (`--renderer=opengl`) | Scene interaction tools | Picking/camera behavior | Screenshot/offscreen render path | Overall | Release blocker | Evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Linux | x86_64 | OpenJDK 25.0.1 | **FAIL** (probe exit `2`: OpenGL backend class missing) | **UNRESOLVED** (GUI workflow not runnable in this headless validation run) | **UNRESOLVED** (GUI workflow not runnable in this headless validation run) | **FAIL** (offscreen path unavailable because backend probe failed) | **FAIL** | **YES** | `java -cp /tmp/probeclasses:Deploy/jReality/jReality.jar org.gavrog.apps._3dt.RendererProbe` |
+| Windows | x86_64 | not run | **UNRESOLVED** | **UNRESOLVED** | **UNRESOLVED** | **UNRESOLVED** | **UNRESOLVED** | **YES** | No Windows runtime in this execution environment |
+| macOS | x86_64 | not run | **UNRESOLVED** | **UNRESOLVED** | **UNRESOLVED** | **UNRESOLVED** | **UNRESOLVED** | **YES** | No macOS runtime in this execution environment |
+| macOS | arm64 | not run | **UNRESOLVED** | **UNRESOLVED** | **UNRESOLVED** | **UNRESOLVED** | **UNRESOLVED** | **YES** | No macOS arm64 runtime in this execution environment |
+
+### Release-gate interpretation
+
+Any **FAIL** or **UNRESOLVED** entry above is a migration release blocker.
+As of this update, there are unresolved blockers in every required matrix row,
+so migration completion status remains **blocked**.
