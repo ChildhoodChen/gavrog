@@ -16,8 +16,6 @@ An online version of Systre as part of webGavrog is not yet available, but there
 
 The hardest migration issue for 3dt is the historical OpenGL stack (jReality + JOGL 1.1.1 native libraries), which was packaged for older platforms and does not map cleanly to modern 64-bit JVM setups.
 
-This repository now uses a software-only renderer path for 3dt on modern systems. The legacy JOGL/OpenGL runtime path has been removed from startup scripts and viewer initialization to eliminate 32/64-bit native compatibility failures.
+This repository now includes a short-term compatibility step: launch scripts disable the OpenGL backend by default and 3dt falls back to jReality's software viewer when OpenGL initialization fails.
 
 A detailed migration plan is documented in `docs-3dt-64bit-migration-plan.md`.
-
-3dt launchers now force software rendering (`-Dorg.gavrog.3dt.renderer=software`) and do not load JOGL native libraries.
