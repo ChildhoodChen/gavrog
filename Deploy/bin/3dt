@@ -34,19 +34,16 @@ esac
 
 os_name=$(uname -s 2>/dev/null || echo unknown)
 os_arch=$(uname -m 2>/dev/null || echo unknown)
-
 case "$os_arch" in
-    x86_64|amd64) norm_arch="x86_64" ;;
-    aarch64|arm64) norm_arch="arm64" ;;
-    i386|i486|i586|i686|x86) norm_arch="x86" ;;
-    *) norm_arch="$os_arch" ;;
+    x86_64|amd64) normalized_arch="x86_64" ;;
+    aarch64|arm64) normalized_arch="arm64" ;;
+    *) normalized_arch="$os_arch" ;;
 esac
-
 case "$os_name" in
-    Linux*) platform_key="linux-$norm_arch" ;;
-    Darwin*) platform_key="macos-$norm_arch" ;;
-    MINGW*|MSYS*|CYGWIN*) platform_key="windows-$norm_arch" ;;
-    *) platform_key="unknown-$norm_arch" ;;
+    Linux*) platform_key="linux-$normalized_arch" ;;
+    Darwin*) platform_key="macos-$normalized_arch" ;;
+    MINGW*|MSYS*|CYGWIN*) platform_key="windows-$normalized_arch" ;;
+    *) platform_key="unknown-$normalized_arch" ;;
 esac
 
 HW_JARS="$BASE/jogl/jogl.jar:$BASE/jogl/gluegen-rt.jar"

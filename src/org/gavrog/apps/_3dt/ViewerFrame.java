@@ -63,6 +63,9 @@ import de.jreality.util.Rectangle3D;
 import de.jreality.util.RenderTrigger;
 
 import org.gavrog.apps._3dt.render.OpenGlBackendAdapter;
+import org.gavrog.apps._3dt.render.HardwareRendererBackend;
+import org.gavrog.apps._3dt.render.NativeBundleSupport;
+import org.gavrog.apps._3dt.render.ReflectiveOpenGlBackend;
 
 /**
  */
@@ -276,10 +279,24 @@ public class ViewerFrame extends JFrame {
 			return softwareSelection(requested, "requested software renderer");
 		}
 
+		final NativeBundleSupport.Status nativeStatus = NativeBundleSupport
+				.evaluate();
+		if (!nativeStatus.canAttemptHardwareRenderer()) {
+			if (requested == RendererMode.OPENGL) {
+				return softwareSelection(requested,
+						"opengl renderer disabled: "
+								+ nativeStatus.describeBlocker());
+			}
+			return softwareSelection(requested,
+					"auto mode selected software: "
+							+ nativeStatus.describeBlocker());
+		}
+
 		final String[] backends = configuredOpenGlBackends();
+		final HardwareRendererBackend rendererBackend =
+				new ReflectiveOpenGlBackend(backends);
 		final List<String> failures = new ArrayList<String>();
-		final OpenGlBackendAdapter adapter = OpenGlBackendAdapter
-				.tryCreate(backends, failures);
+		final OpenGlBackendAdapter adapter = rendererBackend.tryCreate(failures);
 		if (adapter != null) {
 			final OpenGlBackend candidate = new OpenGlBackend(adapter);
 			configureViewer(candidate.getViewer());
