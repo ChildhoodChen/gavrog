@@ -1,0 +1,23 @@
+# path	sha256	url	license	notes
+Deploy/jReality/jReality.jar	94397baf1302218b96c0841305555ef60bbee5b44633b0d80d0efa5c5442b32c		jReality license (Deploy/jReality/LICENSE)	legacy bundled jar; upstream URL not yet pinned
+Deploy/jReality/bsh.jar	91395c07885839a8c6986d5b7c577cd9bacf01bf129c89141f35e8ea858427b6	https://repo1.maven.org/maven2/org/beanshell/bsh/2.0b4/bsh-2.0b4.jar	LGPL	BeanShell
+Deploy/jReality/jtem-beans.jar	be48bf108058cad0d8ab0f3020d63c18284e3da8ec4ef84582af6cc2d8083474		jReality/jTEM bundle	legacy bundled jar; upstream URL not yet pinned
+Deploy/jReality/jterm.jar	458b4931461ed48fa2bdca48dd66c172490df52cf01ce544db26c18b63547f2f		license unclear (Deploy/jReality/README)	legacy bundled jar; upstream URL not yet pinned
+Deploy/jogl/jogl.jar	653a0ac4116c42439a11dd7c77361783a19b40c81d0fc8cd1a6197d304360cdf	https://repo1.maven.org/maven2/javax/media/jogl/1.1.1/jogl-1.1.1.jar	BSD (Deploy/jogl/LICENSE-JOGL-1.1.1.txt)	JOGL 1.1.1
+Deploy/jogl/gluegen-rt.jar	c9f7fe49cbc50c51de4a309388c1e1523e8fcb717f72ac011b356a61ae5044f7	https://repo1.maven.org/maven2/net/java/dev/gluegen/gluegen-rt/1.0b05/gluegen-rt-1.0b05.jar	BSD-style via JOGL bundle	legacy gluegen runtime jar
+Deploy/jogl-win/gluegen-rt.dll	9b606794552c48ab661ee4a879b97cf85d85b577ddecb184e3463a2d29359a4d		BSD-style via JOGL bundle	legacy native, no pinned URL
+Deploy/jogl-win/jogl.dll	1c58df63f00f4e4ef2876773b8c78832bf815d86337cd38e437a4ecd4ba3b538		BSD-style via JOGL bundle	legacy native, no pinned URL
+Deploy/jogl-win/jogl_awt.dll	afc35c840368302e206f5751a5abca2911b5dc5ecc2547804d91612b33d5ad22		BSD-style via JOGL bundle	legacy native, no pinned URL
+Deploy/jogl-win/jogl_cg.dll	d15496c45dd988d4acc4f8441bdc4e2beb3609421cb5c6fc36742039d29180fa		BSD-style via JOGL bundle	legacy native, no pinned URL
+Deploy/jogl-unix/libgluegen-rt.so	b12462550ad7359c2bd5ee8b0373ff4286542fbe193d14a085dd699d3b2bbfa6		BSD-style via JOGL bundle	legacy native, no pinned URL
+Deploy/jogl-unix/libjogl.so	5765dc54992755191602336ecf2706141cc20c35e9fa2a6fa0f466f0253e6df5		BSD-style via JOGL bundle	legacy native, no pinned URL
+Deploy/jogl-unix/libjogl_awt.so	c27d7b258e5016854205ea6a2fb34b37ac06d94260eb0f2b69a5454f1303b96c		BSD-style via JOGL bundle	legacy native, no pinned URL
+Deploy/jogl-unix/libjogl_cg.so	26013a5734473a753960960b8b0fc1c9e23ccd5b1cdc3d6d934e03de0a5f676a		BSD-style via JOGL bundle	legacy native, no pinned URL
+Deploy/jogl-mac/libgluegen-rt.jnilib	dc182e99f03061f6a1ee7c0701c409830ee9ec459271d3801265739d7e9df182		BSD-style via JOGL bundle	legacy native, no pinned URL
+Deploy/jogl-mac/libjogl.jnilib	d2ea2d3ba0acadd464010622f4a8fce892967cabeb692999a42ceb2621289c22		BSD-style via JOGL bundle	legacy native, no pinned URL
+Deploy/jogl-mac/libjogl_awt.jnilib	92f2c1c730d546f5cf32a58f7ac59946b82880576f6bb50d61751314fbaf0e70		BSD-style via JOGL bundle	legacy native, no pinned URL
+Deploy/jogl-mac/libjogl_cg.jnilib	59d8df4be3b46d52478c960e2a33e080290687a16c69d990df1d871a2902a6d3		BSD-style via JOGL bundle	legacy native, no pinned URL
+Deploy/sunflow/sunflow.jar	b72a4cd19ecab47a6fc6b094c3251cf63b276996ba23b98f1fd49acf2b9ed704		sunflow MIT (Deploy/sunflow/LICENSE)	legacy bundled jar; upstream URL not yet pinned
+Deploy/sunflow/janino.jar	bc136ff424efdbd272f613110f81c878d1e8dc9f1dfbfb7c9a639615c2bacecb	https://repo1.maven.org/maven2/janino/janino/2.5.15/janino-2.5.15.jar	BSD	janino for sunflow
+Deploy/XStream/xstream.jar	84ae98d9e5ea2c596e4161b6b20d9bb3ebe5dbc17f31822835c7dc5b71ccd27f	https://repo1.maven.org/maven2/com/thoughtworks/xstream/xstream/1.2.2/xstream-1.2.2.jar	BSD (Deploy/XStream/LICENSE)	xstream legacy
+Deploy/XStream/xpp3.jar	ebcdef45cb16eeb113032b27c8537fd98d6f46b1071b6765febd596b8cac0f1a	https://repo1.maven.org/maven2/xpp3/xpp3_min/1.1.3.4.O/xpp3_min-1.1.3.4.O.jar	Indiana Univ. license (Deploy/XStream/xpp-license.txt)	xpp3 legacy

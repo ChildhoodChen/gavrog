@@ -19,3 +19,14 @@ The hardest migration issue for 3dt is the historical OpenGL stack (jReality + J
 This repository now includes a short-term compatibility step: launch scripts disable the OpenGL backend by default and 3dt falls back to jReality's software viewer when OpenGL initialization fails.
 
 A detailed migration plan is documented in `docs-3dt-64bit-migration-plan.md`.
+
+Renderer dependency inventory, lockfile-based acquisition, and maintenance docs:
+
+- `docs-renderer-dependencies.md`
+- `docs-renderer-update-policy.md`
+- `docs-renderer-troubleshooting.md`
+
+Minimal support diagnostics command for renderer/backend readiness:
+
+- Unix: `Deploy/bin/3dt-selfcheck`
+- Windows: `Deploy/bin/3dt-selfcheck.bat`
