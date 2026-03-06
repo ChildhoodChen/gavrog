@@ -47,19 +47,24 @@ if /I not "%RENDERER_MODE%"=="software" if /I not "%RENDERER_MODE%"=="auto" if /
 )
 
 set "PLATFORM_KEY=windows-x86_64"
-if /I "%PROCESSOR_ARCHITECTURE%"=="AMD64" set "PLATFORM_KEY=windows-x86_64"
-if /I "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "PLATFORM_KEY=windows-arm64"
-if /I "%PROCESSOR_ARCHITEW6432%"=="AMD64" set "PLATFORM_KEY=windows-x86_64"
-if /I "%PROCESSOR_ARCHITEW6432%"=="ARM64" set "PLATFORM_KEY=windows-arm64"
+set "ARCH_TOKEN=%PROCESSOR_ARCHITECTURE%"
+if defined PROCESSOR_ARCHITEW6432 set "ARCH_TOKEN=%PROCESSOR_ARCHITEW6432%"
+if /I "%ARCH_TOKEN%"=="AMD64" set "PLATFORM_KEY=windows-x86_64"
+if /I "%ARCH_TOKEN%"=="X86_64" set "PLATFORM_KEY=windows-x86_64"
+if /I "%ARCH_TOKEN%"=="ARM64" set "PLATFORM_KEY=windows-arm64"
+if /I "%ARCH_TOKEN%"=="X86" set "PLATFORM_KEY=windows-x86"
+
+set "HW_ROOT=%GAVROG_3DT_ACCEL_ROOT%"
+if not defined HW_ROOT set "HW_ROOT=%BASE%\hardware"
 
 set "JAVA_OPTS=-D3dt.home=%BASE%"
 set "REQUEST_HW=0"
 if /I "%RENDERER_MODE%"=="auto" set "REQUEST_HW=1"
 if /I "%RENDERER_MODE%"=="opengl" set "REQUEST_HW=1"
 
-if "%REQUEST_HW%"=="1" if exist "%BASE%\jogl\jogl.jar" if exist "%BASE%\jogl\gluegen-rt.jar" if exist "%BASE%\hardware\%PLATFORM_KEY%\" (
+if "%REQUEST_HW%"=="1" if exist "%BASE%\jogl\jogl.jar" if exist "%BASE%\jogl\gluegen-rt.jar" if exist "%HW_ROOT%\%PLATFORM_KEY%\" (
   set "CLASSPATH=%CLASSPATH%;%BASE%\jogl\jogl.jar;%BASE%\jogl\gluegen-rt.jar"
-  set "JAVA_OPTS=%JAVA_OPTS% -Djava.library.path=%BASE%\hardware\%PLATFORM_KEY% -Dorg.gavrog.3dt.renderer=opengl"
+  set "JAVA_OPTS=%JAVA_OPTS% -Djava.library.path=%HW_ROOT%\%PLATFORM_KEY% -Dorg.gavrog.3dt.renderer=opengl"
 ) else (
   if /I "%RENDERER_MODE%"=="opengl" (
     echo 3dt warning: OpenGL renderer was requested, but no matching hardware bundle was found for '%PLATFORM_KEY%'. Falling back to software mode.
