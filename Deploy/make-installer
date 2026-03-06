@@ -1,10 +1,22 @@
 #!/usr/bin/env sh
 
-IZPACK=$HOME/Software/IzPack
+IZPACK=${IZPACK:-$HOME/Software/IzPack}
 GAVROG=$PWD/..
 
 jar cmf "$GAVROG/SYSTRE.MF" Systre.jar -C "$GAVROG/bin" org -C "$GAVROG/bin" buoy
 jar cf 3dt-Main.jar -C "$GAVROG/bin" org
+
+for bundle in \
+    hardware/linux-x86_64 \
+    hardware/windows-x86_64 \
+    hardware/windows-arm64 \
+    hardware/macos-x86_64 \
+    hardware/macos-arm64
+ do
+    if [ ! -d "$bundle" ]; then
+        echo "warning: missing optional hardware bundle directory '$bundle'" >&2
+    fi
+done
 
 "$IZPACK/bin/compile" install.xml
 

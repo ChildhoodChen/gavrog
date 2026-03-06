@@ -102,7 +102,8 @@ public class ViewerFrame extends JFrame {
 			final String normalized = value.trim().toLowerCase();
 			if ("software".equals(normalized)) {
 				return SOFTWARE;
-			} else if ("hardware".equals(normalized)) {
+			} else if ("hardware".equals(normalized)
+					|| "opengl".equals(normalized)) {
 				return HARDWARE;
 			} else {
 				return AUTO;

@@ -141,8 +141,8 @@ Installation file for Gavrog, currently in particular for 3dt.
 	    <executable targetfile="$INSTALL_PATH/bin/SystreBatch"
 	    	    os="mac"/>
         </pack>
-        <pack name="3dt" required="yes">
-            <description>The Gavrog tiling viewer</description>
+        <pack name="3dt Core Runtime" required="yes">
+            <description>The Gavrog tiling viewer with software renderer support.</description>
 	    <depends packname="jReality"/>
 	    <depends packname="XStream"/>
 	    <file src="3dt-Main.jar" targetdir="$INSTALL_PATH"/>
@@ -166,6 +166,16 @@ Installation file for Gavrog, currently in particular for 3dt.
 	    <parsable targetfile="$INSTALL_PATH/bin/3dt" os="mac"
 	    	    type="shell"/>
 	    <executable targetfile="$INSTALL_PATH/bin/3dt" os="mac"/>
+        </pack>
+        <pack name="3dt OpenGL Acceleration (optional)" required="no">
+            <description>Optional hardware renderer package with platform-specific 64-bit native binaries.</description>
+            <depends packname="3dt Core Runtime"/>
+            <file src="jogl" targetdir="$INSTALL_PATH"/>
+            <file src="hardware/windows-x86_64" targetdir="$INSTALL_PATH/hardware" os="windows"/>
+            <file src="hardware/windows-arm64" targetdir="$INSTALL_PATH/hardware" os="windows"/>
+            <file src="hardware/linux-x86_64" targetdir="$INSTALL_PATH/hardware" os="unix"/>
+            <file src="hardware/macos-x86_64" targetdir="$INSTALL_PATH/hardware" os="mac"/>
+            <file src="hardware/macos-arm64" targetdir="$INSTALL_PATH/hardware" os="mac"/>
         </pack>
         <pack name="jReality" required="yes">
             <description>The 3d geometry viewer used by 3dt</description>

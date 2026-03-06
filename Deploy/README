@@ -70,6 +70,44 @@ you chose to install the programs in when prompted by the installer.
 
 ===========================================================================
 
+Renderer selection and hardware acceleration:
+-------------------------------------------
+
+3dt now ships as two runtime layers:
+
+- core runtime (always available, software renderer),
+- optional OpenGL acceleration package with platform-specific 64-bit natives.
+
+The launcher scripts accept explicit renderer selection:
+
+    bin/3dt --renderer software
+    bin/3dt --renderer auto
+    bin/3dt --renderer opengl
+
+The same can be set through the environment variable
+`GAVROG_3DT_RENDERER=software|auto|opengl`.
+
+Behavior:
+
+- `software` always uses the software backend.
+- `auto` uses OpenGL only if matching JOGL jars and native bundle are present.
+- `opengl` requests OpenGL and prints a warning if unavailable, then falls
+  back to software.
+
+Supported native bundle directories are:
+
+- `hardware/linux-x86_64`
+- `hardware/windows-x86_64`
+- `hardware/windows-arm64`
+- `hardware/macos-x86_64`
+- `hardware/macos-arm64`
+
+Legacy native paths like `jogl-win`, `jogl-unix`, and `jogl-mac` are no
+longer used by launchers.
+
+
+===========================================================================
+
 Interface basics:
 ----------------
 

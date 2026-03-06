@@ -1,22 +1,77 @@
 #!/bin/sh
 
-JAVA=%JAVA_HOME/bin/java
+JAVA=${JAVA_HOME:+$JAVA_HOME/bin/java}
+if [ -z "$JAVA" ]; then
+    JAVA=java
+fi
 BASE=%INSTALL_PATH
 
-GAVROG=$BASE/Systre.jar:$BASE/3dt-Main.jar
-JREAL=$BASE/jReality/jReality.jar
-JREAL_PLUS=$BASE/jReality/bsh.jar:$BASE/jReality/jtem-beans.jar:$BASE/jReality/jTerm.jar
-XSTREAM=$BASE/XStream/xpp3.jar:$BASE/XStream/xstream.jar
-SUNFLOW=$BASE/sunflow/sunflow.jar:$BASE/sunflow/janino.jar
+GAVROG="$BASE/Systre.jar:$BASE/3dt-Main.jar"
+JREAL="$BASE/jReality/jReality.jar"
+JREAL_PLUS="$BASE/jReality/bsh.jar:$BASE/jReality/jtem-beans.jar:$BASE/jReality/jterm.jar"
+XSTREAM="$BASE/XStream/xpp3.jar:$BASE/XStream/xstream.jar"
+SUNFLOW="$BASE/sunflow/sunflow.jar:$BASE/sunflow/janino.jar"
+CLASSPATH="$GAVROG:$JREAL:$JREAL_PLUS:$XSTREAM:$SUNFLOW"
 
-CLASSPATH=$GAVROG:$JREAL:$JREAL_PLUS:$XSTREAM:$SUNFLOW
+renderer_mode="${GAVROG_3DT_RENDERER:-auto}"
+if [ "$1" = "--renderer" ] && [ -n "$2" ]; then
+    renderer_mode="$2"
+    shift 2
+elif [ "${1#--renderer=}" != "$1" ]; then
+    renderer_mode="${1#--renderer=}"
+    shift
+fi
+renderer_mode=$(echo "$renderer_mode" | tr '[:upper:]' '[:lower:]')
 
-if $JAVA -Xmx512m -D3dt.home="$BASE" -Djava.library.path="$BASE/jogl"\
-    -Dorg.gavrog.3dt.renderer=software\
-    -Dapple.laf.useScreenMenuBar=true\
-    -cp "$CLASSPATH" org.gavrog.apps._3dt.Main $*
-then
+case "$renderer_mode" in
+    software|auto|opengl)
+        ;;
+    *)
+        echo "3dt warning: unknown renderer mode '$renderer_mode'; using 'auto'." >&2
+        renderer_mode="auto"
+        ;;
+esac
+
+os_name=$(uname -s 2>/dev/null || echo unknown)
+os_arch=$(uname -m 2>/dev/null || echo unknown)
+case "$os_name" in
+    Linux*) platform_key="linux-$os_arch" ;;
+    Darwin*) platform_key="macos-$os_arch" ;;
+    MINGW*|MSYS*|CYGWIN*) platform_key="windows-$os_arch" ;;
+    *) platform_key="unknown-$os_arch" ;;
+esac
+
+HW_JARS="$BASE/jogl/jogl.jar:$BASE/jogl/gluegen-rt.jar"
+HW_NATIVE_DIR="$BASE/hardware/$platform_key"
+
+if { [ "$renderer_mode" = "opengl" ] || [ "$renderer_mode" = "auto" ]; } \
+    && [ -f "$BASE/jogl/jogl.jar" ] \
+    && [ -f "$BASE/jogl/gluegen-rt.jar" ] \
+    && [ -d "$HW_NATIVE_DIR" ]; then
+    CLASSPATH="$CLASSPATH:$HW_JARS"
+    CMD_RENDERER="opengl"
+    CMD_LIBPATH="$HW_NATIVE_DIR"
+else
+    if [ "$renderer_mode" = "opengl" ]; then
+        echo "3dt warning: OpenGL renderer was requested, but no matching hardware bundle was found for '$platform_key'. Falling back to software mode." >&2
+    fi
+    CMD_RENDERER="software"
+    CMD_LIBPATH=""
+fi
+
+if [ -n "$CMD_LIBPATH" ]; then
+    "$JAVA" -Xmx512m "-D3dt.home=$BASE" "-Dapple.laf.useScreenMenuBar=true" \
+        "-Djava.library.path=$CMD_LIBPATH" "-Dorg.gavrog.3dt.renderer=$CMD_RENDERER" \
+        -cp "$CLASSPATH" org.gavrog.apps._3dt.Main "$@"
+else
+    "$JAVA" -Xmx512m "-D3dt.home=$BASE" "-Dapple.laf.useScreenMenuBar=true" \
+        "-Dorg.gavrog.3dt.renderer=$CMD_RENDERER" \
+        -cp "$CLASSPATH" org.gavrog.apps._3dt.Main "$@"
+fi
+status=$?
+if [ "$status" -eq 0 ]; then
     echo
 else
     read -p "Hit Return to close this window"
 fi
+exit "$status"
