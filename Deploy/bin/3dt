@@ -12,7 +12,7 @@ SUNFLOW=$BASE/sunflow/sunflow.jar:$BASE/sunflow/janino.jar
 CLASSPATH=$GAVROG:$JREAL:$JREAL_PLUS:$XSTREAM:$SUNFLOW
 
 if $JAVA -Xmx512m -D3dt.home="$BASE" -Djava.library.path="$BASE/jogl"\
-    -Dorg.gavrog.3dt.opengl=off\
+    -Dorg.gavrog.3dt.renderer=software\
     -Dapple.laf.useScreenMenuBar=true\
     -cp "$CLASSPATH" org.gavrog.apps._3dt.Main $*
 then

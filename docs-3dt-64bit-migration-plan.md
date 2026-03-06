@@ -117,3 +117,14 @@ This eliminates 32-bit vs 64-bit native-library mismatch risks in 3dt runtime.
 
 - data-loading smoke validation is automated via `PhaseDSmoke`,
 - rendering correctness validation is now tied to software-renderer behavior only.
+
+
+## Renderer abstraction update (implemented)
+
+A renderer abstraction was introduced in `ViewerFrame` to decouple startup from a hardwired viewer class:
+
+- startup mode is controlled via `-Dorg.gavrog.3dt.renderer={auto|hardware|software}` (default: `auto`),
+- hardware backend candidates are configurable via `-Dorg.gavrog.3dt.hardware.backends=...` and default to `de.jreality.jogl3.Viewer,de.jreality.jogl.Viewer`,
+- hardware viewers are instantiated reflectively and share the same tool-system, picking path, camera path, and render-trigger wiring as software mode,
+- screenshot export now attempts backend offscreen rendering first and transparently falls back to software offscreen rendering when unavailable,
+- startup diagnostics now log requested/selected renderer, backend class/version, and explicit fallback reasons.
