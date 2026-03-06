@@ -37,16 +37,16 @@ This means the hardest part is **dependency/runtime migration**, not basic Java 
 ### 1) Make OpenGL initialization failure-safe on 64-bit
 
 `ViewerFrame` now:
-- supports an explicit system property `org.gavrog.3dt.opengl` (`off|false|0` to disable OpenGL),
-- catches `Throwable` (not only `Exception`) around OpenGL viewer setup/render bootstrap,
-- reliably falls back to `SoftViewer`.
+- supports explicit startup mode selection via `org.gavrog.3dt.renderer=software|auto|opengl`,
+- routes OpenGL backend loading through `org.gavrog.apps._3dt.render.OpenGlBackendAdapter`,
+- reliably falls back to `SoftViewer` when OpenGL initialization fails.
 
 This improves behavior for architecture/native-loader failures that often surface as `Error` subclasses.
 
 ### 2) Disable legacy JOGL path by default in launcher scripts
 
 Launchers now set:
-- `-Dorg.gavrog.3dt.opengl=off`
+- `-Dorg.gavrog.3dt.renderer=software`
 
 This keeps 3dt usable on 64-bit Java out of the box via software rendering, while still allowing future re-enablement by editing scripts or passing overriding JVM properties.
 
@@ -151,7 +151,7 @@ The release validation matrix includes these required dimensions:
 
 - **OS/Arch:** Linux x64, Windows x64, macOS x64, macOS arm64.
 - **JDKs:** all currently supported JDK lines (at least oldest supported LTS + latest supported LTS).
-- **Renderer mode:** hardware and software.
+- **Renderer mode:** software, auto, opengl.
 
 Each matrix cell must run startup + acceptance scenario subset suitable for the platform.
 
@@ -170,7 +170,7 @@ For hardware vs software parity, compare against tolerances and fail on material
 
 A release is blocked unless all of the following are true:
 
-1. **No startup crashes in hardware mode** on supported targets in the matrix.
+1. **No startup crashes in opengl mode** on supported targets in the matrix.
 2. **Fallback behavior is documented and verified** (hardware failure degrades to software mode with explicit diagnostics).
 3. **No high-severity visual/function regressions** in acceptance scenarios versus the current baseline.
 
@@ -194,8 +194,9 @@ This eliminates 32-bit vs 64-bit native-library mismatch risks in 3dt runtime.
 
 A renderer abstraction was introduced in `ViewerFrame` to decouple startup from a hardwired viewer class:
 
-- startup mode is controlled via `-Dorg.gavrog.3dt.renderer={auto|hardware|software}` (default: `auto`),
-- hardware backend candidates are configurable via `-Dorg.gavrog.3dt.hardware.backends=...` and default to `de.jreality.jogl3.Viewer,de.jreality.jogl.Viewer`,
-- hardware viewers are instantiated reflectively and share the same tool-system, picking path, camera path, and render-trigger wiring as software mode,
-- screenshot export now attempts backend offscreen rendering first and transparently falls back to software offscreen rendering when unavailable,
-- startup diagnostics now log requested/selected renderer, backend class/version, and explicit fallback reasons.
+- startup mode is controlled via `-Dorg.gavrog.3dt.renderer={software|auto|opengl}` (default: `auto`),
+- OpenGL backend candidates are configurable via `-Dorg.gavrog.3dt.opengl.backends=...` and default to `de.jreality.jogl3.Viewer`,
+- `opengl` and `auto` both go through a single renderer-selection decision point in `ViewerFrame.selectBackend()`,
+- OpenGL viewers are created via `org.gavrog.apps._3dt.render.OpenGlBackendAdapter` (no direct legacy JOGL viewer wiring in `ViewerFrame`),
+- screenshot export attempts backend offscreen rendering first and transparently falls back to software offscreen rendering when unavailable,
+- startup diagnostics always log requested renderer, selected renderer, and fallback reason (`none` when no fallback happened), plus backend class/version.

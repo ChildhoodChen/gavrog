@@ -16,7 +16,7 @@ An online version of Systre as part of webGavrog is not yet available, but there
 
 The hardest migration issue for 3dt is the historical OpenGL stack (jReality + JOGL 1.1.1 native libraries), which was packaged for older platforms and does not map cleanly to modern 64-bit JVM setups.
 
-This repository now includes a short-term compatibility step: launch scripts disable the OpenGL backend by default and 3dt falls back to jReality's software viewer when OpenGL initialization fails.
+This repository now includes explicit renderer selection in 3dt (`software`, `auto`, `opengl`) via `org.gavrog.3dt.renderer`. Runtime uses one renderer-selection decision point: `software` forces jReality's `SoftViewer`, while `auto` and `opengl` try the OpenGL adapter and fall back to software when initialization fails.
 
 A detailed migration plan is documented in `docs-3dt-64bit-migration-plan.md`.
 
@@ -35,6 +35,8 @@ Launchers (`Deploy/bin/3dt`, `Deploy/bin/3dt.bat`) support explicit renderer sel
 - `opengl`: request OpenGL; if unavailable, print a warning and fall back to software.
 
 Renderer mode can be set either with `GAVROG_3DT_RENDERER` or CLI flags `--renderer=<mode>` / `--renderer <mode>`.
+
+Runtime OpenGL backend candidates are configured with `org.gavrog.3dt.opengl.backends` (default: `de.jreality.jogl3.Viewer`) and instantiated through `org.gavrog.apps._3dt.render.OpenGlBackendAdapter`.
 
 ### Supported hardware-bundle platform matrix
 
