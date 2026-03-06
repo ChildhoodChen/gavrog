@@ -3125,7 +3125,7 @@ public class Main extends EventSource {
     	}
     	return _selectionPopupForEdges;
     }
-    
+
     public class SelectionTool extends AbstractTool {
         final InputSlot activationSlot = InputSlot.getDevice("PrimarySelection");
         final InputSlot addSlot = InputSlot.getDevice("SecondarySelection");
@@ -3144,12 +3144,7 @@ public class Main extends EventSource {
             final PickResult pr = tc.getCurrentPick();
 
             if (pr == null) {
-                final Viewer v = viewerFrame.getViewer();
-                if (v instanceof de.jreality.jogl.Viewer) {
-                	final int n = ((de.jreality.jogl.Viewer) v).getRenderer()
-                					.getPolygonCount();
-					log("polygon count is "	+ n);
-				}
+                return;
             } else {
                 final SceneGraphPath selection = pr.getPickPath();
                 selectedFace = -1;

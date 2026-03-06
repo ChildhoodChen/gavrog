@@ -72,3 +72,48 @@ This keeps 3dt usable on 64-bit Java out of the box via software rendering, whil
 - Validate rendering correctness and interaction tools after dependency upgrade.
 
 In other words, this patch tackles the immediate runtime blocker and provides a practical migration path, but full acceleration-stack modernization is still a larger dependency upgrade project.
+
+## Phase B progress implemented
+
+A first Phase B step is now in place in the runtime code:
+
+- direct compile-time references to `de.jreality.jogl.Viewer` in startup paths were replaced by reflective loading/invocation in `ViewerFrame`,
+- OpenGL-only diagnostic code in `Main` now also uses reflection and gracefully no-ops when the JOGL viewer class is unavailable.
+
+This reduces hard coupling to legacy JOGL classes and makes future renderer replacement/upgrades easier while preserving existing behavior when JOGL is present.
+
+## Phase C progress implemented
+
+A first packaging/distribution modernization step is now implemented in launch scripts:
+
+- renderer mode is exposed as `GAVROG_3DT_RENDERER` (`software`, `auto`, `opengl`) in both Unix and Windows launchers,
+- software mode excludes JOGL jars/native path from startup classpath/options,
+- OpenGL mode now checks for JOGL jar presence and falls back to software mode when unavailable,
+- Unix launcher emits an architecture warning when OpenGL is requested on common 64-bit architectures with legacy natives.
+
+This moves 3dt closer to a split-core/optional-acceleration packaging model without changing the historical installer structure yet.
+
+## Phase D progress implemented
+
+A non-GUI smoke runner was added for repeatable phase-D validation:
+
+- `test/org/gavrog/apps/_3dt/PhaseDSmoke.java` loads `.cgd` fixtures through `Document.load(...)`,
+- supports explicit fixture arguments and includes a default fixture set,
+- reports loaded/missing/failed counts and exits non-zero on parse/load failures.
+
+This provides a lightweight regression check for the data-loading path independent of OpenGL availability.
+
+## Final migration outcome (implemented)
+
+The migration was completed by **removing the legacy OpenGL backend path** from runtime startup and packaging:
+
+- `ViewerFrame` now always initializes `SoftViewer` and no longer attempts JOGL viewer construction,
+- launcher scripts no longer place JOGL jars/native paths on the runtime classpath,
+- installer packaging no longer includes the optional legacy `jogl` pack.
+
+This eliminates 32-bit vs 64-bit native-library mismatch risks in 3dt runtime.
+
+### Validation status
+
+- data-loading smoke validation is automated via `PhaseDSmoke`,
+- rendering correctness validation is now tied to software-renderer behavior only.

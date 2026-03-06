@@ -30,12 +30,10 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.media.opengl.GLException;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 
-import org.gavrog.box.gui.Invoke;
 
 import de.jreality.geometry.GeometryUtility;
 import de.jreality.geometry.Primitives;
@@ -80,13 +78,10 @@ public class ViewerFrame extends JFrame {
 	private Viewer viewer;
     private double lastCenter[] = null;
 	
-	private static boolean shouldTryOpenGL() {
-		final String value = System.getProperty("org.gavrog.3dt.opengl", "auto")
-				.trim().toLowerCase();
-		return !("false".equals(value) || "off".equals(value)
-				|| "0".equals(value));
+	private static void logRenderer(final String message) {
+		System.err.println("[3dt] " + message);
 	}
-    
+
 
 	public ViewerFrame(final SceneGraphComponent content) {
 		contentNode = content;
@@ -123,38 +118,14 @@ public class ViewerFrame extends JFrame {
 		softwareViewer.setSceneRoot(rootNode);
 		softwareViewer.setCameraPath(camPath);
 		setupToolSystem(softwareViewer, emptyPickPath);
-		
-		if (shouldTryOpenGL()) {
-			try {
-				viewer = new de.jreality.jogl.Viewer();
-				viewer.setSceneRoot(rootNode);
-				viewer.setCameraPath(camPath);
-				setupToolSystem(viewer, emptyPickPath);
-			} catch (Throwable ex) {
-				System.err.println("OpenGL viewer could not be initialized.");
-				viewer = softwareViewer;
-			}
-		} else {
-			viewer = softwareViewer;
-		}
-		
+
+		viewer = softwareViewer;
+		logRenderer("OpenGL backend removed; using software renderer");
 		setViewer(viewer);
 		setViewerSize(new Dimension(640, 400));
 		pack();
 		
-		if (viewer instanceof de.jreality.jogl.Viewer) {
-			Invoke.andWait(new Runnable() {
-				public void run() {
-					try {
-						((de.jreality.jogl.Viewer) viewer).run();
-						System.err.println("OpenGL okay!");
-					} catch (Throwable ex) {
-						System.err.println("OpenGL viewer could not render.");
-						setViewer(softwareViewer);
-					}
-				}
-			});
-		}
+		logRenderer("active renderer = Software");
 
 		renderTrigger.addSceneGraphComponent(rootNode);
 	}
