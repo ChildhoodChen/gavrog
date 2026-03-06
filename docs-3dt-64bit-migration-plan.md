@@ -2,6 +2,26 @@
 
 ## Why this migration is hard
 
+
+## Current deployment matrix and launcher behavior
+
+Deployment assembly is now split into:
+
+- **core runtime** (always software-capable; no hard-coded legacy native path),
+- **optional OpenGL package** (`jogl` jars + `hardware/<platform-arch>` natives).
+
+Supported hardware bundle directories:
+
+- `hardware/linux-x86_64`
+- `hardware/windows-x86_64`
+- `hardware/windows-arm64`
+- `hardware/macos-x86_64`
+- `hardware/macos-arm64`
+
+Launcher renderer selection is `software|auto|opengl` via `GAVROG_3DT_RENDERER`
+or `--renderer`. `opengl` prints an explicit warning and falls back to
+software when no matching bundle is available.
+
 The core issue is not Java integer width in the 3dt source code; it is **packaged native rendering dependencies**:
 
 1. 3dt uses jReality's JOGL-based OpenGL viewer (`de.jreality.jogl.Viewer`) for fast rendering.
