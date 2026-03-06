@@ -176,14 +176,6 @@ Installation file for Gavrog, currently in particular for 3dt.
 			</description>
 	    <file src="XStream" targetdir="$INSTALL_PATH"/>
 	</pack>
-	<pack name="jogl" required="no">
-	    <description>OpenGL support for faster viewing</description>
-	    <fileset dir="jogl" targetdir="$INSTALL_PATH/jogl" os="windows"/>
-	    <fileset dir="jogl-win" targetdir="$INSTALL_PATH/jogl" os="windows"/>
-	    <fileset dir="jogl" targetdir="$INSTALL_PATH/jogl" os="unix"/>
-	    <fileset dir="jogl-unix" targetdir="$INSTALL_PATH/jogl" os="unix"/>
-	    <fileset dir="jogl-mac" targetdir="$INSTALL_PATH/jogl" os="mac"/>
-	</pack>
 	<pack name="sunflow" required="no">
 	    <description>
 	        Adds global-illumination raytrace rendering

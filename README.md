@@ -10,3 +10,14 @@ Unfortunately, 3dt is a casualty of 64-bit Java, among other things. It ended up
 See https://github.com/odf/webGavrog for the code and http://gavrog.org/webGavrog/ for an online version. A file with all applicable RCSR nets can be downloaded from http://rcsr.net/systre as "Systre input data (.cgd)" and then opened in webGavrog.
 
 An online version of Systre as part of webGavrog is not yet available, but there is a command line script implementing most of its functionality.
+
+
+## 3dt and 64-bit status
+
+The hardest migration issue for 3dt is the historical OpenGL stack (jReality + JOGL 1.1.1 native libraries), which was packaged for older platforms and does not map cleanly to modern 64-bit JVM setups.
+
+This repository now uses a software-only renderer path for 3dt on modern systems. The legacy JOGL/OpenGL runtime path has been removed from startup scripts and viewer initialization to eliminate 32/64-bit native compatibility failures.
+
+A detailed migration plan is documented in `docs-3dt-64bit-migration-plan.md`.
+
+3dt launchers now force software rendering (`-Dorg.gavrog.3dt.renderer=software`) and do not load JOGL native libraries.
