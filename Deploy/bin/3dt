@@ -34,15 +34,24 @@ esac
 
 os_name=$(uname -s 2>/dev/null || echo unknown)
 os_arch=$(uname -m 2>/dev/null || echo unknown)
+
+case "$os_arch" in
+    x86_64|amd64) norm_arch="x86_64" ;;
+    aarch64|arm64) norm_arch="arm64" ;;
+    i386|i486|i586|i686|x86) norm_arch="x86" ;;
+    *) norm_arch="$os_arch" ;;
+esac
+
 case "$os_name" in
-    Linux*) platform_key="linux-$os_arch" ;;
-    Darwin*) platform_key="macos-$os_arch" ;;
-    MINGW*|MSYS*|CYGWIN*) platform_key="windows-$os_arch" ;;
-    *) platform_key="unknown-$os_arch" ;;
+    Linux*) platform_key="linux-$norm_arch" ;;
+    Darwin*) platform_key="macos-$norm_arch" ;;
+    MINGW*|MSYS*|CYGWIN*) platform_key="windows-$norm_arch" ;;
+    *) platform_key="unknown-$norm_arch" ;;
 esac
 
 HW_JARS="$BASE/jogl/jogl.jar:$BASE/jogl/gluegen-rt.jar"
-HW_NATIVE_DIR="$BASE/hardware/$platform_key"
+HW_ROOT="${GAVROG_3DT_ACCEL_ROOT:-$BASE/hardware}"
+HW_NATIVE_DIR="$HW_ROOT/$platform_key"
 
 if { [ "$renderer_mode" = "opengl" ] || [ "$renderer_mode" = "auto" ]; } \
     && [ -f "$BASE/jogl/jogl.jar" ] \
