@@ -20,13 +20,30 @@ This repository now includes a short-term compatibility step: launch scripts dis
 
 A detailed migration plan is documented in `docs-3dt-64bit-migration-plan.md`.
 
-Renderer dependency inventory, lockfile-based acquisition, and maintenance docs:
 
-- `docs-renderer-dependencies.md`
-- `docs-renderer-update-policy.md`
-- `docs-renderer-troubleshooting.md`
+## 3dt runtime packaging and renderer selection
 
-Minimal support diagnostics command for renderer/backend readiness:
+The deployment layout under `Deploy/` is split into:
 
-- Unix: `Deploy/bin/3dt-selfcheck`
-- Windows: `Deploy/bin/3dt-selfcheck.bat`
+- **Core runtime**: pure Java launch/runtime artifacts (always includes software rendering).
+- **Optional hardware acceleration package**: JOGL jars plus platform-specific native libraries under `hardware/<platform-arch>/`.
+
+Launchers (`Deploy/bin/3dt`, `Deploy/bin/3dt.bat`) support explicit renderer selection:
+
+- `software`: force software renderer.
+- `auto`: try OpenGL only when matching hardware bundle is present; otherwise use software.
+- `opengl`: request OpenGL; if unavailable, print a warning and fall back to software.
+
+Renderer mode can be set either with `GAVROG_3DT_RENDERER` or CLI flags `--renderer=<mode>` / `--renderer <mode>`.
+
+### Supported hardware-bundle platform matrix
+
+Hardware bundles are expected in these deployment directories:
+
+- `hardware/linux-x86_64`
+- `hardware/windows-x86_64`
+- `hardware/windows-arm64`
+- `hardware/macos-x86_64`
+- `hardware/macos-arm64`
+
+Only matching 64-bit bundles are considered by launchers; legacy `Deploy/jogl-{win,unix,mac}` native folders are not used by runtime assembly anymore.
