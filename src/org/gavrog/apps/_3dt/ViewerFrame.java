@@ -27,7 +27,12 @@ import java.awt.event.WindowEvent;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.JFrame;
@@ -73,10 +78,152 @@ public class ViewerFrame extends JFrame {
 	final private Map<String, SceneGraphComponent> lights =
 		new HashMap<String, SceneGraphComponent>();
 	
-	final private SoftViewer softwareViewer;
+	private final SceneGraphPath cameraPath;
+	private final SceneGraphPath emptyPickPath;
+	private ViewerBackend backend;
+	private final RendererDiagnostics diagnostics;
 	final private RenderTrigger renderTrigger = new RenderTrigger();
 	private Viewer viewer;
     private double lastCenter[] = null;
+
+	private static final String RENDERER_PROPERTY = "org.gavrog.3dt.renderer";
+	private static final String HARDWARE_BACKENDS_PROPERTY =
+			"org.gavrog.3dt.hardware.backends";
+	private static final String[] DEFAULT_HARDWARE_BACKENDS = new String[] {
+			"de.jreality.jogl3.Viewer", "de.jreality.jogl.Viewer" };
+
+	public enum RendererMode {
+		SOFTWARE, HARDWARE, AUTO;
+		
+		public static RendererMode fromProperty(final String value) {
+			if (value == null || value.trim().length() == 0) {
+				return AUTO;
+			}
+			final String normalized = value.trim().toLowerCase();
+			if ("software".equals(normalized)) {
+				return SOFTWARE;
+			} else if ("hardware".equals(normalized)) {
+				return HARDWARE;
+			} else {
+				return AUTO;
+			}
+		}
+	}
+
+	public static final class RendererDiagnostics {
+		private final RendererMode requestedMode;
+		private final RendererMode selectedMode;
+		private final String backendClass;
+		private final String backendVersion;
+		private final String fallbackReason;
+
+		private RendererDiagnostics(final RendererMode requestedMode,
+				final RendererMode selectedMode,
+				final String backendClass,
+				final String backendVersion,
+				final String fallbackReason) {
+			this.requestedMode = requestedMode;
+			this.selectedMode = selectedMode;
+			this.backendClass = backendClass;
+			this.backendVersion = backendVersion;
+			this.fallbackReason = fallbackReason;
+		}
+
+		public RendererMode getRequestedMode() {
+			return requestedMode;
+		}
+
+		public RendererMode getSelectedMode() {
+			return selectedMode;
+		}
+
+		public String getBackendClass() {
+			return backendClass;
+		}
+
+		public String getBackendVersion() {
+			return backendVersion;
+		}
+
+		public String getFallbackReason() {
+			return fallbackReason;
+		}
+	}
+
+	private interface ViewerBackend {
+		Viewer getViewer();
+		String getBackendClass();
+		String getBackendVersion();
+		BufferedImage renderOffscreen(int width, int height);
+	}
+
+	private static final class SoftwareBackend implements ViewerBackend {
+		private final SoftViewer viewer;
+
+		private SoftwareBackend() {
+			this.viewer = new SoftViewer();
+		}
+
+		public Viewer getViewer() {
+			return viewer;
+		}
+
+		public String getBackendClass() {
+			return viewer.getClass().getName();
+		}
+
+		public String getBackendVersion() {
+			return detectPackageVersion(viewer.getClass());
+		}
+
+		public BufferedImage renderOffscreen(final int width, final int height) {
+			return viewer.renderOffscreen(width, height);
+		}
+	}
+
+	private static final class ReflectiveBackend implements ViewerBackend {
+		private final Viewer viewer;
+		private final Method offscreenMethod;
+
+		private ReflectiveBackend(final Viewer viewer,
+				final Method offscreenMethod) {
+			this.viewer = viewer;
+			this.offscreenMethod = offscreenMethod;
+		}
+
+		public Viewer getViewer() {
+			return viewer;
+		}
+
+		public String getBackendClass() {
+			return viewer.getClass().getName();
+		}
+
+		public String getBackendVersion() {
+			String version = detectPackageVersion(viewer.getClass());
+			if ("unknown".equals(version)) {
+				final String joglVersion = detectJoglVersion();
+				if (joglVersion != null) {
+					version = joglVersion;
+				}
+			}
+			return version;
+		}
+
+		public BufferedImage renderOffscreen(final int width, final int height) {
+			if (offscreenMethod == null) {
+				return null;
+			}
+			try {
+				return (BufferedImage) offscreenMethod.invoke(viewer,
+						new Object[] { Integer.valueOf(width), Integer.valueOf(height) });
+			} catch (IllegalAccessException ex) {
+				return null;
+			} catch (InvocationTargetException ex) {
+				return null;
+			}
+		}
+	}
 	
 	private static void logRenderer(final String message) {
 		System.err.println("[3dt] " + message);
@@ -104,30 +251,171 @@ public class ViewerFrame extends JFrame {
 		rootApp.setAttribute(CommonAttributes.DIFFUSE_COLOR, Color.RED);
 		rootNode.setAppearance(rootApp);
 
-		SceneGraphPath camPath = new SceneGraphPath();
-		camPath.push(rootNode);
-		camPath.push(cameraNode);
-		camPath.push(camera);
+		cameraPath = new SceneGraphPath();
+		cameraPath.push(rootNode);
+		cameraPath.push(cameraNode);
+		cameraPath.push(camera);
 		
-		SceneGraphPath emptyPickPath = new SceneGraphPath();
+		emptyPickPath = new SceneGraphPath();
 		emptyPickPath.push(rootNode);
 		emptyPickPath.push(geometryNode);
 		emptyPickPath.push(contentNode);
 
-		softwareViewer = new SoftViewer();
-		softwareViewer.setSceneRoot(rootNode);
-		softwareViewer.setCameraPath(camPath);
-		setupToolSystem(softwareViewer, emptyPickPath);
-
-		viewer = softwareViewer;
-		logRenderer("OpenGL backend removed; using software renderer");
+		final RendererSelection selection = selectBackend();
+		backend = selection.backend;
+		viewer = backend.getViewer();
+		diagnostics = selection.diagnostics;
 		setViewer(viewer);
 		setViewerSize(new Dimension(640, 400));
 		pack();
 		
-		logRenderer("active renderer = Software");
+		logRenderer("renderer requested=" + diagnostics.getRequestedMode()
+				+ ", selected=" + diagnostics.getSelectedMode()
+				+ ", backend=" + diagnostics.getBackendClass()
+				+ ", version=" + diagnostics.getBackendVersion());
+		if (diagnostics.getFallbackReason() != null) {
+			logRenderer("renderer fallback reason: "
+					+ diagnostics.getFallbackReason());
+		}
 
 		renderTrigger.addSceneGraphComponent(rootNode);
+	}
+
+	private static final class RendererSelection {
+		private final ViewerBackend backend;
+		private final RendererDiagnostics diagnostics;
+
+		private RendererSelection(final ViewerBackend backend,
+				final RendererDiagnostics diagnostics) {
+			this.backend = backend;
+			this.diagnostics = diagnostics;
+		}
+	}
+
+	private RendererSelection selectBackend() {
+		final RendererMode requested = RendererMode
+				.fromProperty(System.getProperty(RENDERER_PROPERTY));
+		if (requested == RendererMode.SOFTWARE) {
+			return softwareSelection(requested, null);
+		}
+
+		final String[] backends = configuredHardwareBackends();
+		final List<String> failures = new ArrayList<String>();
+		for (final String className : backends) {
+			final ReflectiveBackend candidate = tryCreateReflectiveBackend(className,
+					failures);
+			if (candidate != null) {
+				configureViewer(candidate.getViewer());
+				return new RendererSelection(candidate, new RendererDiagnostics(
+						requested, RendererMode.HARDWARE,
+						candidate.getBackendClass(),
+						candidate.getBackendVersion(), null));
+			}
+		}
+
+		if (requested == RendererMode.HARDWARE) {
+			return softwareSelection(requested,
+					"hardware renderer initialization failed: "
+							+ joinFailures(failures));
+		}
+		return softwareSelection(requested,
+				"no usable hardware renderer detected: " + joinFailures(failures));
+	}
+
+	private RendererSelection softwareSelection(final RendererMode requested,
+			final String fallbackReason) {
+		final SoftwareBackend software = new SoftwareBackend();
+		configureViewer(software.getViewer());
+		return new RendererSelection(software, new RendererDiagnostics(requested,
+				RendererMode.SOFTWARE, software.getBackendClass(),
+				software.getBackendVersion(), fallbackReason));
+	}
+
+	private void configureViewer(final Viewer candidate) {
+		candidate.setSceneRoot(rootNode);
+		candidate.setCameraPath(cameraPath);
+		setupToolSystem(candidate, emptyPickPath);
+	}
+
+	private String[] configuredHardwareBackends() {
+		final String configured = System.getProperty(HARDWARE_BACKENDS_PROPERTY);
+		if (configured == null || configured.trim().length() == 0) {
+			return DEFAULT_HARDWARE_BACKENDS;
+		}
+		final String[] raw = configured.split(",");
+		final List<String> names = new ArrayList<String>();
+		for (int i = 0; i < raw.length; ++i) {
+			final String trimmed = raw[i].trim();
+			if (trimmed.length() > 0) {
+				names.add(trimmed);
+			}
+		}
+		if (names.isEmpty()) {
+			return DEFAULT_HARDWARE_BACKENDS;
+		}
+		return names.toArray(new String[names.size()]);
+	}
+
+	private ReflectiveBackend tryCreateReflectiveBackend(final String className,
+			final List<String> failures) {
+		try {
+			final Class<?> klass = Class.forName(className);
+			final Object instance = klass.getDeclaredConstructor().newInstance();
+			if (!(instance instanceof Viewer)) {
+				failures.add(className + " is not a de.jreality.scene.Viewer");
+				return null;
+			}
+			Method offscreen = null;
+			try {
+				offscreen = klass.getMethod("renderOffscreen",
+						new Class[] { Integer.TYPE, Integer.TYPE });
+			} catch (NoSuchMethodException ex) {
+				offscreen = null;
+			}
+			return new ReflectiveBackend((Viewer) instance, offscreen);
+		} catch (Throwable ex) {
+			failures.add(className + " failed: " + ex.getClass().getSimpleName()
+					+ (ex.getMessage() == null ? "" : " (" + ex.getMessage() + ")"));
+			return null;
+		}
+	}
+
+	private static String joinFailures(final List<String> failures) {
+		if (failures.isEmpty()) {
+			return "none reported";
+		}
+		return Arrays.toString(failures.toArray(new String[failures.size()]));
+	}
+
+	private static String detectPackageVersion(final Class<?> klass) {
+		final Package pkg = klass.getPackage();
+		if (pkg == null) {
+			return "unknown";
+		}
+		final String impl = pkg.getImplementationVersion();
+		if (impl != null && impl.length() > 0) {
+			return impl;
+		}
+		final String spec = pkg.getSpecificationVersion();
+		if (spec != null && spec.length() > 0) {
+			return spec;
+		}
+		return "unknown";
+	}
+
+	private static String detectJoglVersion() {
+		final String[] candidates = new String[] { "com.jogamp.opengl.GL",
+				"javax.media.opengl.GL" };
+		for (int i = 0; i < candidates.length; ++i) {
+			try {
+				final Class<?> glClass = Class.forName(candidates[i]);
+				return candidates[i] + "@"
+						+ detectPackageVersion(glClass);
+			} catch (Throwable ex) {
+				// try next
+			}
+		}
+		return null;
 	}
 	
 	private void setupToolSystem(final Viewer viewer,
@@ -253,8 +541,17 @@ public class ViewerFrame extends JFrame {
 			final File file) {
 		final int width = (int) size.width;
 		final int height = (int) size.height;
-		final BufferedImage img = softwareViewer.renderOffscreen(width
-				* antialias, height * antialias);
+		BufferedImage img = backend.renderOffscreen(width * antialias, height
+				* antialias);
+		if (img == null) {
+			final SoftViewer fallback = new SoftViewer();
+			fallback.setSceneRoot(rootNode);
+			fallback.setCameraPath(viewer.getCameraPath());
+			img = fallback.renderOffscreen(width * antialias, height * antialias);
+			logRenderer("offscreen rendering not supported by "
+					+ diagnostics.getBackendClass()
+					+ "; used software fallback for screenshot export");
+		}
 		final BufferedImage scaledImg = new BufferedImage(width, height,
 				BufferedImage.TYPE_INT_RGB);
 		final Graphics2D g = (Graphics2D) scaledImg.getGraphics();
@@ -268,6 +565,14 @@ public class ViewerFrame extends JFrame {
 	
 	public Viewer getViewer() {
 		return this.viewer;
+	}
+
+	public RendererDiagnostics getRendererDiagnostics() {
+		return diagnostics;
+	}
+
+	public boolean isHardwareRendererActive() {
+		return diagnostics.getSelectedMode() == RendererMode.HARDWARE;
 	}
 
 	public void setViewer(final Viewer viewer) {

@@ -11,6 +11,6 @@ set SUNFLOW=%BASE%\sunflow\sunflow.jar;%BASE%\sunflow\janino.jar
 
 set CLASSPATH=%GAVROG%;%JREAL%;%JREAL_PLUS%;%XSTREAM%;%SUNFLOW%
 
-"%JAVA%" -Xmx512m -D3dt.home="%BASE%" -Djava.library.path="%BASE%\jogl" -Dorg.gavrog.3dt.opengl=off -cp "%CLASSPATH%" org.gavrog.apps._3dt.Main %*
+"%JAVA%" -Xmx512m -D3dt.home="%BASE%" -Djava.library.path="%BASE%\jogl" -Dorg.gavrog.3dt.renderer=software -cp "%CLASSPATH%" org.gavrog.apps._3dt.Main %*
 
 exit
