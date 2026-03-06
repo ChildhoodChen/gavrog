@@ -115,13 +115,64 @@ This moves 3dt closer to a split-core/optional-acceleration packaging model with
 
 ## Phase D progress implemented
 
-A non-GUI smoke runner was added for repeatable phase-D validation:
+Phase D coverage has been expanded to define both automated smoke checks and GUI acceptance gates.
 
-- `test/org/gavrog/apps/_3dt/PhaseDSmoke.java` loads `.cgd` fixtures through `Document.load(...)`,
-- supports explicit fixture arguments and includes a default fixture set,
-- reports loaded/missing/failed counts and exits non-zero on parse/load failures.
+### 1) Non-GUI smoke coverage expansion (implemented)
 
-This provides a lightweight regression check for the data-loading path independent of OpenGL availability.
+`test/org/gavrog/apps/_3dt/PhaseDSmoke.java` now validates more than plain fixture loading:
+
+- representative `.cgd` fixtures (`qtz`, `afi`, `srs`, `dia` + requested fixture when present),
+- representative `.ds` fixtures (`simple_14_good`, `simple_15_good`, `simple_16_good`),
+- critical non-GUI operations per loaded document:
+  - embedder/net/signature/group-info derivation,
+  - tile insertion, recoloring, neighbor and neighbor-facet expansion,
+  - tile-class color update,
+  - facet hide/show and facet class color mutation.
+
+The runner still reports `loaded/missing/failed` and exits non-zero when any fixture/operation check fails.
+
+### 2) GUI/render acceptance scenarios (defined)
+
+Acceptance scenarios for interactive and export behavior are now explicitly defined:
+
+1. **Camera controls**
+   - orbit/rotate, pan, zoom, fit-to-scene, and reset behavior.
+2. **Picking/interaction tools**
+   - face picking, add tile at picked face, remove selected tile, color-edit actions.
+3. **Tile operations and visual property changes**
+   - tile/facet visibility toggles, random recolor, explicit class recolor, edge/facet display toggles.
+4. **Screenshot/export workflows**
+   - screenshot export with antialiasing,
+   - scene export workflows (OBJ and Sunflow) complete without runtime exceptions.
+
+### 3) Validation matrix dimensions (defined)
+
+The release validation matrix includes these required dimensions:
+
+- **OS/Arch:** Linux x64, Windows x64, macOS x64, macOS arm64.
+- **JDKs:** all currently supported JDK lines (at least oldest supported LTS + latest supported LTS).
+- **Renderer mode:** hardware and software.
+
+Each matrix cell must run startup + acceptance scenario subset suitable for the platform.
+
+### 4) Deterministic render-regression checks (defined)
+
+Where deterministic pixel parity is feasible, use golden-image checks. Where it is not, use stable scene metrics:
+
+- camera matrix / transform snapshots,
+- scene graph node counts by semantic type,
+- pick-hit identity for canonical click targets,
+- export artifact sanity checks (non-empty file, expected headers/sections).
+
+For hardware vs software parity, compare against tolerances and fail on material deviations outside thresholds.
+
+### 5) Release gates (defined)
+
+A release is blocked unless all of the following are true:
+
+1. **No startup crashes in hardware mode** on supported targets in the matrix.
+2. **Fallback behavior is documented and verified** (hardware failure degrades to software mode with explicit diagnostics).
+3. **No high-severity visual/function regressions** in acceptance scenarios versus the current baseline.
 
 ## Final migration outcome (implemented)
 
