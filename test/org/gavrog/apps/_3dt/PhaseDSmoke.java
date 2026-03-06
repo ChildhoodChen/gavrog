@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.gavrog.joss.geometry.Vector;
@@ -25,10 +26,14 @@ public class PhaseDSmoke {
                 "test/TestResources/RCSR-tilings/afi-3dt.cgd",
                 "test/TestResources/RCSR-tilings/srs-3dt.cgd",
                 "test/TestResources/RCSR-tilings/dia-3dt.cgd",
+                "test/TestResources/RCSR-tilings/ana-3dt.cgd",
+                "test/TestResources/RCSR-tilings/ato-3dt.cgd",
+                "test/TestResources/RCSR-tilings/asv-3dt.cgd",
                 // --- representative .ds load cases
                 "test/TestResources/simple_14_good.ds",
                 "test/TestResources/simple_15_good.ds",
-                "test/TestResources/simple_16_good.ds");
+                "test/TestResources/simple_16_good.ds",
+                "test/TestResources/ftmax.ds");
     }
 
     private static void runCriticalOperations(final Document doc) {
@@ -83,12 +88,14 @@ public class PhaseDSmoke {
         int missing = 0;
         int docsChecked = 0;
         final List<String> failures = new ArrayList<String>();
+        final List<String> missingFixtures = new ArrayList<String>();
 
         for (final String path: fixtures) {
             final File file = new File(path);
             if (!file.exists()) {
                 System.err.println("[phase-d] missing fixture: " + path);
                 ++missing;
+                missingFixtures.add(path);
                 continue;
             }
             try {
@@ -98,22 +105,35 @@ public class PhaseDSmoke {
                 } else {
                     for (int i = 0; i < docs.size(); ++i) {
                         final Document doc = docs.get(i);
-                        runCriticalOperations(doc);
-                        ++docsChecked;
-                        System.err.println("[phase-d] checked " + path + "#" + i
-                                + " name=\"" + doc.getName() + "\"");
+                        try {
+                            runCriticalOperations(doc);
+                            ++docsChecked;
+                            System.err.println("[phase-d] checked " + path + "#" + i
+                                    + " name=\"" + doc.getName() + "\"");
+                        } catch (Throwable ex) {
+                            failures.add(path + "#" + i + " ("
+                                    + ex.getClass().getName() + ": "
+                                    + String.valueOf(ex.getMessage()) + ")");
+                        }
                     }
                     ++loaded;
                 }
             } catch (Throwable ex) {
                 failures.add(path + " (" + ex.getClass().getName() + ": "
-                        + ex.getMessage() + ")");
+                        + String.valueOf(ex.getMessage()) + ")");
             }
         }
 
         System.err.println("[phase-d] summary: loaded=" + loaded + ", docsChecked="
                 + docsChecked + ", missing=" + missing + ", failed="
                 + failures.size());
+
+        Collections.sort(missingFixtures);
+        Collections.sort(failures);
+
+        for (final String path: missingFixtures) {
+            System.err.println("[phase-d] missing: " + path);
+        }
 
         if (!failures.isEmpty()) {
             for (final String x: failures) {

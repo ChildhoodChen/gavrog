@@ -47,7 +47,8 @@ case "$os_name" in
 esac
 
 HW_JARS="$BASE/jogl/jogl.jar:$BASE/jogl/gluegen-rt.jar"
-HW_NATIVE_DIR="$BASE/hardware/$platform_key"
+HW_ROOT="${GAVROG_3DT_ACCEL_ROOT:-$BASE/hardware}"
+HW_NATIVE_DIR="$HW_ROOT/$platform_key"
 
 if { [ "$renderer_mode" = "opengl" ] || [ "$renderer_mode" = "auto" ]; } \
     && [ -f "$BASE/jogl/jogl.jar" ] \

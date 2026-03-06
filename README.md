@@ -36,6 +36,9 @@ Launchers (`Deploy/bin/3dt`, `Deploy/bin/3dt.bat`) support explicit renderer sel
 
 Renderer mode can be set either with `GAVROG_3DT_RENDERER` or CLI flags `--renderer=<mode>` / `--renderer <mode>`.
 
+Optional override: set `GAVROG_3DT_ACCEL_ROOT` to point to an alternate
+hardware bundle root (default: `<install>/hardware`).
+
 Runtime OpenGL backend candidates are configured with `org.gavrog.3dt.opengl.backends` (default: `de.jreality.jogl3.Viewer`) and instantiated through `org.gavrog.apps._3dt.render.OpenGlBackendAdapter`.
 
 ### Supported hardware-bundle platform matrix

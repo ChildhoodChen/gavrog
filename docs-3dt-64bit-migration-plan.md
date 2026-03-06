@@ -174,6 +174,75 @@ A release is blocked unless all of the following are true:
 2. **Fallback behavior is documented and verified** (hardware failure degrades to software mode with explicit diagnostics).
 3. **No high-severity visual/function regressions** in acceptance scenarios versus the current baseline.
 
+
+## GUI acceptance checklist (release blocking)
+
+The following checklist must be executed and recorded for every required
+matrix cell before migration is declared complete.
+
+### Camera tools
+
+- [ ] Orbit/rotate interaction updates the view smoothly.
+- [ ] Pan interaction preserves orientation.
+- [ ] Zoom in/out behaves consistently.
+- [ ] Fit-to-scene and reset-camera return to predictable framing.
+
+### Picking and interaction
+
+- [ ] Face-picking resolves the expected tile/facet target.
+- [ ] Add-tile from picked face succeeds.
+- [ ] Remove-selected tile succeeds.
+- [ ] Recolor action applies to the intended picked object.
+
+### Tile operations
+
+- [ ] Neighbor and neighbor-facet expansion actions succeed.
+- [ ] Tile/facet visibility toggles behave as expected.
+- [ ] Tile-class and facet-class color edits persist in-session.
+
+### Screenshot / export
+
+- [ ] Screenshot export completes and writes non-empty output.
+- [ ] OBJ export completes and contains expected header/body sections.
+- [ ] Sunflow export completes without renderer/runtime exceptions.
+
+### Renderer parity checks
+
+- [ ] Software vs OpenGL scene state matches for canonical fixtures.
+- [ ] Picking identity parity is within accepted tolerance.
+- [ ] Any backend-specific visual deviation is triaged and documented.
+
+## Release gate matrix (must be green)
+
+Use the matrix below as the minimum release gate surface. A migration release
+cannot be declared complete unless every required row is green.
+
+| OS | Arch | JDK | Renderer mode | Required status |
+| --- | --- | --- | --- | --- |
+| Linux | x86_64 | oldest supported LTS | software | green |
+| Linux | x86_64 | latest supported LTS | auto | green |
+| Linux | x86_64 | latest supported LTS | opengl | green |
+| Windows | x86_64 | oldest supported LTS | software | green |
+| Windows | x86_64 | latest supported LTS | auto | green |
+| Windows | x86_64 | latest supported LTS | opengl | green |
+| Windows | arm64 | latest supported LTS | software | green |
+| Windows | arm64 | latest supported LTS | auto | green |
+| macOS | x86_64 | latest supported LTS | software | green |
+| macOS | x86_64 | latest supported LTS | opengl | green |
+| macOS | arm64 | oldest supported LTS | software | green |
+| macOS | arm64 | latest supported LTS | auto | green |
+| macOS | arm64 | latest supported LTS | opengl | green |
+
+A matrix row is **green** only when all conditions are true:
+
+1. launcher startup passes with the selected renderer mode,
+2. Phase-D smoke runner passes for required fixtures,
+3. GUI acceptance checklist items above are completed,
+4. renderer parity checks have no unresolved critical deviations.
+
+If any required row is non-green, migration completion status must remain
+**blocked**.
+
 ## Final migration outcome (implemented)
 
 The migration was completed by **removing the legacy OpenGL backend path** from runtime startup and packaging:

@@ -87,6 +87,9 @@ The launcher scripts accept explicit renderer selection:
 The same can be set through the environment variable
 `GAVROG_3DT_RENDERER=software|auto|opengl`.
 
+Optional override: set `GAVROG_3DT_ACCEL_ROOT` to point to an alternate
+hardware bundle root (default: `<install>/hardware`).
+
 Behavior:
 
 - `software` always uses the software backend.
