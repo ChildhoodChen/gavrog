@@ -79,6 +79,13 @@ public class ViewerFrame extends JFrame {
 	final private RenderTrigger renderTrigger = new RenderTrigger();
 	private Viewer viewer;
     private double lastCenter[] = null;
+	
+	private static boolean shouldTryOpenGL() {
+		final String value = System.getProperty("org.gavrog.3dt.opengl", "auto")
+				.trim().toLowerCase();
+		return !("false".equals(value) || "off".equals(value)
+				|| "0".equals(value));
+	}
     
 
 	public ViewerFrame(final SceneGraphComponent content) {
@@ -117,13 +124,17 @@ public class ViewerFrame extends JFrame {
 		softwareViewer.setCameraPath(camPath);
 		setupToolSystem(softwareViewer, emptyPickPath);
 		
-		try {
-			viewer = new de.jreality.jogl.Viewer();
-			viewer.setSceneRoot(rootNode);
-			viewer.setCameraPath(camPath);
-			setupToolSystem(viewer, emptyPickPath);
-		} catch (Exception ex) {
-			System.err.println("OpenGL viewer could not be initialized.");
+		if (shouldTryOpenGL()) {
+			try {
+				viewer = new de.jreality.jogl.Viewer();
+				viewer.setSceneRoot(rootNode);
+				viewer.setCameraPath(camPath);
+				setupToolSystem(viewer, emptyPickPath);
+			} catch (Throwable ex) {
+				System.err.println("OpenGL viewer could not be initialized.");
+				viewer = softwareViewer;
+			}
+		} else {
 			viewer = softwareViewer;
 		}
 		
@@ -137,11 +148,9 @@ public class ViewerFrame extends JFrame {
 					try {
 						((de.jreality.jogl.Viewer) viewer).run();
 						System.err.println("OpenGL okay!");
-					} catch (GLException ex) {
+					} catch (Throwable ex) {
 						System.err.println("OpenGL viewer could not render.");
 						setViewer(softwareViewer);
-					} catch (Exception ex) {
-						ex.printStackTrace();
 					}
 				}
 			});
