@@ -73,6 +73,9 @@ import javax.swing.KeyStroke;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
+import org.gavrog.apps._3dt.render.NativeBundleSupport;
+import org.gavrog.apps._3dt.render.OpenGlBackendAdapter;
+
 import org.gavrog.box.gui.Config;
 import org.gavrog.box.gui.ExtensionFilter;
 import org.gavrog.box.gui.Invoke;
@@ -153,11 +156,8 @@ import de.jtem.beans.DimensionPanel;
 
 public class Main extends EventSource {
 	// --- pre-load some information from files
-	private static Archive systreArchive = new Archive("1.0");
-	static {
-		readArchive(systreArchive, "org/gavrog/apps/systre/rcsr.arc");
-		SpaceGroupCatalogue.load();
-	}
+	private static final Archive systreArchive = new Archive("1.0");
+	private static boolean startupResourcesLoaded = false;
 	
 	// --- some constants used in the GUI
     final private static Color textColor = new Color(255, 250, 240);
@@ -167,6 +167,12 @@ public class Main extends EventSource {
 	private final static String configFileName = System.getProperty("user.home")
 			+ "/.3dt";
 	
+	private static final String SELF_CHECK_FLAG = "--self-check";
+	private static final String OPENGL_BACKENDS_PROPERTY =
+			"org.gavrog.3dt.opengl.backends";
+	private static final String[] DEFAULT_OPENGL_BACKENDS = new String[] {
+			"de.jreality.jogl3.Viewer" };
+
 	// --- file choosers
 	final private FileChooser inFileChooser =
 		new FileChooser(FileChooser.OPEN_FILE);
@@ -310,6 +316,7 @@ public class Main extends EventSource {
      * @param args command-line arguments
      */
     public Main(final String[] args) {
+    	ensureStartupResourcesLoaded();
     	// --- parse command line options
     	String infilename = null;
     	if (args.length > 0) {
@@ -3853,18 +3860,90 @@ public class Main extends EventSource {
 		this.aboutFrame.setVisible(true);
 	}
     
+	private static synchronized void ensureStartupResourcesLoaded() {
+		if (startupResourcesLoaded) {
+			return;
+		}
+		readArchive(systreArchive, "org/gavrog/apps/systre/rcsr.arc");
+		SpaceGroupCatalogue.load();
+		startupResourcesLoaded = true;
+	}
+
 	private static double deg(final double d) {
 		return d / 180.0 * Math.PI;
 	}
 	
 	private static void readArchive(final Archive arc, final String path) {
 	    final InputStream stream = ClassLoader.getSystemResourceAsStream(path);
+	    if (stream == null) {
+	    	return;
+	    }
 	    final BufferedReader reader =
 	    	new BufferedReader(new InputStreamReader(stream));
 	    arc.addAll(reader);
 	}
 	
+    private static String[] configuredOpenGlBackends() {
+    	final String configured = System.getProperty(OPENGL_BACKENDS_PROPERTY);
+    	if (configured == null || configured.trim().length() == 0) {
+    		return DEFAULT_OPENGL_BACKENDS;
+    	}
+    	final String[] raw = configured.split(",");
+    	final List<String> names = new ArrayList<String>();
+    	for (int i = 0; i < raw.length; ++i) {
+    		final String trimmed = raw[i].trim();
+    		if (trimmed.length() > 0) {
+    			names.add(trimmed);
+    		}
+    	}
+    	if (names.isEmpty()) {
+    		return DEFAULT_OPENGL_BACKENDS;
+    	}
+    	return names.toArray(new String[names.size()]);
+    }
+
+    private static String joinFailures(final List<String> failures) {
+    	if (failures.isEmpty()) {
+    		return "none";
+    	}
+    	return Arrays.toString(failures.toArray(new String[failures.size()]));
+    }
+
+    private static int runSelfCheck(final PrintStream out) {
+    	final NativeBundleSupport.Status nativeStatus = NativeBundleSupport.evaluate();
+    	out.println("3dt renderer self-check");
+    	out.println("  platform_key=" + nativeStatus.getPlatformKey());
+    	out.println("  jvm_64bit=" + nativeStatus.is64BitJvm());
+    	out.println("  native_bundle_present=" + nativeStatus.hasNativeDirectory());
+    	out.println("  hardware_attempt_allowed=" + nativeStatus.canAttemptHardwareRenderer());
+    	out.println("  hardware_blocker=" + nativeStatus.describeBlocker());
+
+    	final String[] backends = configuredOpenGlBackends();
+    	out.println("  opengl_backend_candidates=" + Arrays.toString(backends));
+    	final List<String> failures = new ArrayList<String>();
+    	final OpenGlBackendAdapter adapter = OpenGlBackendAdapter.tryCreate(backends, failures);
+    	if (adapter == null) {
+    		out.println("  opengl_backend_available=false");
+    		out.println("  opengl_backend_failures=" + joinFailures(failures));
+    		return nativeStatus.canAttemptHardwareRenderer() ? 2 : 0;
+    	}
+
+    	out.println("  opengl_backend_available=true");
+    	out.println("  opengl_backend_class=" + adapter.getBackendClass());
+    	out.println("  opengl_backend_version=" + adapter.getBackendVersion());
+    	out.println("  opengl_native_loaded=" + (failures.isEmpty() ? "true" : "unknown"));
+    	out.println("  opengl_backend_failures=" + joinFailures(failures));
+    	return 0;
+    }
+
     public static void main(final String[] args) {
+    	if (args.length > 0 && SELF_CHECK_FLAG.equals(args[0])) {
+    		final int status = runSelfCheck(System.out);
+    		if (status != 0) {
+    			System.exit(status);
+    		}
+    		return;
+    	}
         new Main(args);
     }
     
