@@ -48,7 +48,10 @@ public final class RendererProbe {
     static int runProbe(final PrintStream out) {
         final String[] backends = configuredOpenGlBackends();
         out.println("3dt renderer probe");
+        out.println("  java.library.path=" + System.getProperty("java.library.path"));
+        out.println("  java.awt.headless=" + java.awt.GraphicsEnvironment.isHeadless());
         out.println("  opengl_backend_candidates=" + Arrays.toString(backends));
+        out.println("  opengl_backend_selected_class=" + backends[0]);
 
         final List<String> failures = new ArrayList<String>();
         final OpenGlBackendAdapter adapter =
