@@ -1,0 +1,6 @@
+backend=de.jreality.jogl.Viewer
+backend_version=JOGL 1.1.1 + GlueGen 1.0b05 (legacy)
+platform=macos-x86_64
+required_native_files=libgluegen-rt.jnilib,libjogl.jnilib,libjogl_awt.jnilib,libjogl_cg.jnilib
+source_native_bundle=Deploy/jogl-mac
+compatibility=validated against Deploy/jogl/jogl.jar (1.1.1) and Deploy/jogl/gluegen-rt.jar (1.0b05 era)

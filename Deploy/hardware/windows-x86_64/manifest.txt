@@ -1,0 +1,6 @@
+backend=de.jreality.jogl.Viewer
+backend_version=JOGL 1.1.1 + GlueGen 1.0b05 (legacy)
+platform=windows-x86_64
+required_native_files=gluegen-rt.dll,jogl.dll,jogl_awt.dll,jogl_cg.dll
+source_native_bundle=Deploy/jogl-win
+compatibility=validated against Deploy/jogl/jogl.jar (1.1.1) and Deploy/jogl/gluegen-rt.jar (1.0b05 era)

@@ -56,18 +56,39 @@ if /I "%ARCH_TOKEN%"=="X86" set "PLATFORM_KEY=windows-x86"
 
 set "HW_ROOT=%GAVROG_3DT_ACCEL_ROOT%"
 if not defined HW_ROOT set "HW_ROOT=%BASE%\hardware"
+set "HW_NATIVE_DIR=%HW_ROOT%\%PLATFORM_KEY%"
+
+set "REQUIRED_NATIVE_FILES="
+if /I "%PLATFORM_KEY:~0,6%"=="linux-" set "REQUIRED_NATIVE_FILES=libgluegen-rt.so libjogl.so libjogl_awt.so libjogl_cg.so"
+if /I "%PLATFORM_KEY:~0,8%"=="windows-" set "REQUIRED_NATIVE_FILES=gluegen-rt.dll jogl.dll jogl_awt.dll jogl_cg.dll"
+if /I "%PLATFORM_KEY:~0,6%"=="macos-" set "REQUIRED_NATIVE_FILES=libgluegen-rt.jnilib libjogl.jnilib libjogl_awt.jnilib libjogl_cg.jnilib"
+
+set "NATIVE_FILES_OK=1"
+set "MISSING_NATIVE_FILE="
+for %%F in (%REQUIRED_NATIVE_FILES%) do (
+  if not exist "%HW_NATIVE_DIR%\%%F" (
+    set "NATIVE_FILES_OK=0"
+    set "MISSING_NATIVE_FILE=%%F"
+    goto native_scan_done
+  )
+)
+:native_scan_done
 
 set "JAVA_OPTS=-D3dt.home=%BASE%"
 set "REQUEST_HW=0"
 if /I "%RENDERER_MODE%"=="auto" set "REQUEST_HW=1"
 if /I "%RENDERER_MODE%"=="opengl" set "REQUEST_HW=1"
 
-if "%REQUEST_HW%"=="1" if exist "%BASE%\jogl\jogl.jar" if exist "%BASE%\jogl\gluegen-rt.jar" if exist "%HW_ROOT%\%PLATFORM_KEY%\" (
+if "%REQUEST_HW%"=="1" if exist "%BASE%\jogl\jogl.jar" if exist "%BASE%\jogl\gluegen-rt.jar" if exist "%HW_NATIVE_DIR%\" if "%NATIVE_FILES_OK%"=="1" (
   set "CLASSPATH=%CLASSPATH%;%BASE%\jogl\jogl.jar;%BASE%\jogl\gluegen-rt.jar"
-  set "JAVA_OPTS=%JAVA_OPTS% -Djava.library.path=%HW_ROOT%\%PLATFORM_KEY% -Dorg.gavrog.3dt.renderer=opengl"
+  set "JAVA_OPTS=%JAVA_OPTS% -Djava.library.path=%HW_NATIVE_DIR% -Dorg.gavrog.3dt.renderer=opengl"
 ) else (
   if /I "%RENDERER_MODE%"=="opengl" (
-    echo 3dt warning: OpenGL renderer was requested, but no matching hardware bundle was found for '%PLATFORM_KEY%'. Falling back to software mode.
+    if defined MISSING_NATIVE_FILE (
+      echo 3dt warning: OpenGL renderer was requested, but required native file '!MISSING_NATIVE_FILE!' is missing in '%HW_NATIVE_DIR%'. Falling back to software mode.
+    ) else (
+      echo 3dt warning: OpenGL renderer was requested, but no matching hardware bundle was found for '%PLATFORM_KEY%'. Falling back to software mode.
+    )
   )
   set "JAVA_OPTS=%JAVA_OPTS% -Dorg.gavrog.3dt.renderer=software"
 )
