@@ -62,10 +62,42 @@ public final class OpenGlBackendAdapter {
             }
             return new OpenGlBackendAdapter((Viewer) instance, offscreen);
         } catch (Throwable ex) {
-            failures.add(className + " failed: " + ex.getClass().getSimpleName()
-                    + (ex.getMessage() == null ? "" : " (" + ex.getMessage() + ")"));
+            failures.add(className + " failed: " + describeFailure(ex));
             return null;
         }
+    }
+
+    private static String describeFailure(final Throwable ex) {
+        final StringBuffer details = new StringBuffer();
+        Throwable current = ex;
+        int depth = 0;
+        while (current != null && depth < 16) {
+            if (depth > 0) {
+                details.append(" <- ");
+            }
+            details.append(current.getClass().getSimpleName());
+            if (current.getMessage() != null && current.getMessage().length() > 0) {
+                details.append(" (");
+                details.append(current.getMessage());
+                details.append(")");
+            }
+            if (current instanceof InvocationTargetException) {
+                final Throwable target =
+                        ((InvocationTargetException) current).getCause();
+                if (target != null && target != current) {
+                    current = target;
+                } else {
+                    current = current.getCause();
+                }
+            } else {
+                current = current.getCause();
+            }
+            depth += 1;
+        }
+        if (current != null) {
+            details.append(" <- ...");
+        }
+        return details.toString();
     }
 
     public Viewer getViewer() {

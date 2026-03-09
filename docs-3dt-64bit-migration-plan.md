@@ -290,7 +290,15 @@ Behavior:
 
 - exits `0` when an OpenGL backend can be instantiated,
 - exits `2` when OpenGL backend initialization fails,
-- prints backend candidates and initialization failure details.
+- prints `java.library.path`, `java.awt.headless`, backend candidates,
+  selected backend class, and detailed nested initialization failures.
+
+Environment requirement for interpreting probe results:
+
+- a GUI-capable runtime is required for definitive OpenGL pass/fail
+  (for CI, use Xvfb or an equivalent display server),
+- headless-only runs may fail backend instantiation due to AWT/GL context
+  limitations even when classpath and native libraries are present.
 
 ### Validation run record (startup `--renderer=opengl`, interaction, picking/camera, screenshot/offscreen)
 
@@ -299,7 +307,7 @@ Legend: **PASS** = validated, **FAIL** = validated and failed,
 
 | OS | Arch | JDK | Startup (`--renderer=opengl`) | Scene interaction tools | Picking/camera behavior | Screenshot/offscreen render path | Overall | Release blocker | Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Linux | x86_64 | OpenJDK 25.0.1 | **FAIL** (probe exit `2`: OpenGL backend class missing) | **UNRESOLVED** (GUI workflow not runnable in this headless validation run) | **UNRESOLVED** (GUI workflow not runnable in this headless validation run) | **FAIL** (offscreen path unavailable because backend probe failed) | **FAIL** | **YES** | `java -cp /tmp/probeclasses:Deploy/jReality/jReality.jar org.gavrog.apps._3dt.RendererProbe` |
+| Linux | x86_64 | OpenJDK 25.0.1 | **FAIL** in headless-only run (probe exit `2`; backend requires GUI/AWT context) | **UNRESOLVED** (GUI workflow not runnable in this headless validation run) | **UNRESOLVED** (GUI workflow not runnable in this headless validation run) | **FAIL** (offscreen path unavailable because backend probe failed) | **FAIL** | **YES** | `java -cp /tmp/probeclasses:Deploy/jReality/jReality.jar org.gavrog.apps._3dt.RendererProbe` |
 | Windows | x86_64 | not run | **UNRESOLVED** | **UNRESOLVED** | **UNRESOLVED** | **UNRESOLVED** | **UNRESOLVED** | **YES** | No Windows runtime in this execution environment |
 | macOS | x86_64 | not run | **UNRESOLVED** | **UNRESOLVED** | **UNRESOLVED** | **UNRESOLVED** | **UNRESOLVED** | **YES** | No macOS runtime in this execution environment |
 | macOS | arm64 | not run | **UNRESOLVED** | **UNRESOLVED** | **UNRESOLVED** | **UNRESOLVED** | **UNRESOLVED** | **YES** | No macOS arm64 runtime in this execution environment |
@@ -309,3 +317,8 @@ Legend: **PASS** = validated, **FAIL** = validated and failed,
 Any **FAIL** or **UNRESOLVED** entry above is a migration release blocker.
 As of this update, there are unresolved blockers in every required matrix row,
 so migration completion status remains **blocked**.
+
+For Linux x86_64 OpenGL specifically, the row can only be marked green after
+running `RendererProbe` in a supported GUI-capable runtime and observing probe
+exit `0`. Headless-only evidence (without Xvfb/display server) is diagnostic
+only and cannot be used to mark the row green.
