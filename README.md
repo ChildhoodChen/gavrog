@@ -52,3 +52,18 @@ Hardware bundles are expected in these deployment directories:
 - `hardware/macos-arm64`
 
 Only matching 64-bit bundles are considered by launchers; legacy `Deploy/jogl-{win,unix,mac}` native folders are not used by runtime assembly anymore.
+
+
+### Current validation scope and backend limits
+
+Current release-gate evidence is limited to a Linux-hosted, headless validation
+environment. In that environment, `--renderer=opengl` startup probing fails for
+Windows x86_64, macOS x86_64, and macOS arm64 bundle targets (plus Linux
+x86_64) due to missing GUI/display context and unresolved native loads in the
+platform-native bundle directories.
+
+Until native GUI-capable validation is completed on each target OS/arch,
+3dt should be treated as **software-renderer supported** for production use.
+OpenGL mode remains **experimental/non-release-ready** across the required
+64-bit matrix and continues to be release-blocking when FAIL/UNRESOLVED in
+`docs-3dt-64bit-migration-plan.md`.
