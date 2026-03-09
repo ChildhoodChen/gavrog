@@ -69,35 +69,52 @@ public final class OpenGlBackendAdapter {
 
     private static String describeFailure(final Throwable ex) {
         final StringBuffer details = new StringBuffer();
+        appendThrowable(details, ex);
+
         Throwable current = ex;
         int depth = 0;
-        while (current != null && depth < 16) {
-            if (depth > 0) {
-                details.append(" <- ");
+        while (current != null && depth < 8) {
+            final Throwable next = nextCause(current);
+            if (next == null || next == current) {
+                break;
             }
-            details.append(current.getClass().getSimpleName());
-            if (current.getMessage() != null && current.getMessage().length() > 0) {
-                details.append(" (");
-                details.append(current.getMessage());
-                details.append(")");
-            }
-            if (current instanceof InvocationTargetException) {
-                final Throwable target =
-                        ((InvocationTargetException) current).getCause();
-                if (target != null && target != current) {
-                    current = target;
-                } else {
-                    current = current.getCause();
-                }
-            } else {
-                current = current.getCause();
-            }
+            details.append(" <- ");
+            appendThrowable(details, next);
+            current = next;
             depth += 1;
         }
-        if (current != null) {
+        if (nextCause(current) != null && depth >= 8) {
             details.append(" <- ...");
         }
         return details.toString();
+    }
+
+    private static Throwable nextCause(final Throwable ex) {
+        if (ex instanceof InvocationTargetException) {
+            final Throwable target = ((InvocationTargetException) ex).getCause();
+            if (target != null && target != ex) {
+                return target;
+            }
+        }
+        return ex.getCause();
+    }
+
+    private static void appendThrowable(final StringBuffer details,
+            final Throwable ex) {
+        details.append(ex.getClass().getSimpleName());
+        final String compactMessage = compact(ex.getMessage());
+        if (compactMessage != null && compactMessage.length() > 0) {
+            details.append('(');
+            details.append(compactMessage);
+            details.append(')');
+        }
+    }
+
+    private static String compact(final String text) {
+        if (text == null) {
+            return null;
+        }
+        return text.replaceAll("\\s+", " ").trim();
     }
 
     public Viewer getViewer() {
