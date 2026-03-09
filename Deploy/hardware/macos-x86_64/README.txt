@@ -1,2 +1,3 @@
-Place platform-specific 64-bit JOGL native binaries for macos-x86_64 in this directory.
-These files are intentionally not populated with legacy 32-bit bundles.
+This directory is the platform-native bundle target for the JOGL-based OpenGL backend on macos-x86_64.
+Populate it during packaging (do not commit binaries in PRs).
+See manifest.txt for required filenames, source bundle, and compatibility notes.

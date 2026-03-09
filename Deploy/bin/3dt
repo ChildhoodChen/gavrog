@@ -50,16 +50,48 @@ HW_JARS="$BASE/jogl/jogl.jar:$BASE/jogl/gluegen-rt.jar"
 HW_ROOT="${GAVROG_3DT_ACCEL_ROOT:-$BASE/hardware}"
 HW_NATIVE_DIR="$HW_ROOT/$platform_key"
 
+required_native_files() {
+    case "$1" in
+        linux-*)
+            echo "libgluegen-rt.so libjogl.so libjogl_awt.so libjogl_cg.so"
+            ;;
+        windows-*)
+            echo "gluegen-rt.dll jogl.dll jogl_awt.dll jogl_cg.dll"
+            ;;
+        macos-*)
+            echo "libgluegen-rt.jnilib libjogl.jnilib libjogl_awt.jnilib libjogl_cg.jnilib"
+            ;;
+        *)
+            echo ""
+            ;;
+    esac
+}
+
+missing_native_file=""
+native_files_ok=true
+for native_file in $(required_native_files "$platform_key"); do
+    if [ ! -f "$HW_NATIVE_DIR/$native_file" ]; then
+        missing_native_file="$native_file"
+        native_files_ok=false
+        break
+    fi
+done
+
 if { [ "$renderer_mode" = "opengl" ] || [ "$renderer_mode" = "auto" ]; } \
     && [ -f "$BASE/jogl/jogl.jar" ] \
     && [ -f "$BASE/jogl/gluegen-rt.jar" ] \
-    && [ -d "$HW_NATIVE_DIR" ]; then
+    && [ -d "$HW_NATIVE_DIR" ] \
+    && [ "$native_files_ok" = true ]; then
     CLASSPATH="$CLASSPATH:$HW_JARS"
     CMD_RENDERER="opengl"
     CMD_LIBPATH="$HW_NATIVE_DIR"
 else
     if [ "$renderer_mode" = "opengl" ]; then
-        echo "3dt warning: OpenGL renderer was requested, but no matching hardware bundle was found for '$platform_key'. Falling back to software mode." >&2
+        if [ -n "$missing_native_file" ]; then
+            echo "3dt warning: OpenGL renderer was requested, but required native file '$missing_native_file' is missing in '$HW_NATIVE_DIR'. Falling back to software mode." >&2
+        else
+            echo "3dt warning: OpenGL renderer was requested, but no matching hardware bundle was found for '$platform_key'. Falling back to software mode." >&2
+        fi
     fi
     CMD_RENDERER="software"
     CMD_LIBPATH=""

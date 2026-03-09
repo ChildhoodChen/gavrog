@@ -3911,12 +3911,15 @@ public class Main extends EventSource {
 
     private static int runSelfCheck(final PrintStream out) {
     	final NativeBundleSupport.Status nativeStatus = NativeBundleSupport.evaluate();
-    	out.println("3dt renderer self-check");
-    	out.println("  platform_key=" + nativeStatus.getPlatformKey());
-    	out.println("  jvm_64bit=" + nativeStatus.is64BitJvm());
-    	out.println("  native_bundle_present=" + nativeStatus.hasNativeDirectory());
-    	out.println("  hardware_attempt_allowed=" + nativeStatus.canAttemptHardwareRenderer());
-    	out.println("  hardware_blocker=" + nativeStatus.describeBlocker());
+	    	out.println("3dt renderer self-check");
+	    	out.println("  platform_key=" + nativeStatus.getPlatformKey());
+	    	out.println("  jvm_64bit=" + nativeStatus.is64BitJvm());
+	    	out.println("  native_bundle_present=" + nativeStatus.hasNativeDirectory());
+	    	out.println("  missing_native_file="
+	    			+ (nativeStatus.getMissingNativeFile() == null ? "none"
+	    					: nativeStatus.getMissingNativeFile()));
+	    	out.println("  hardware_attempt_allowed=" + nativeStatus.canAttemptHardwareRenderer());
+	    	out.println("  hardware_blocker=" + nativeStatus.describeBlocker());
 
     	final String[] backends = configuredOpenGlBackends();
     	out.println("  opengl_backend_candidates=" + Arrays.toString(backends));
