@@ -16,7 +16,7 @@ import org.gavrog.joss.tilings.Tiling;
  */
 public class PhaseDSmoke {
     private static final String REQUESTED_FIXTURE =
-            "test/TestResources/RCSR-tilings/SSZ-43-mono_3dt.cgd";
+            "test/TestResources/RCSR-tilings/ast-3dt.cgd";
 
     private static List<String> defaultFixtures() {
         return Arrays.asList(

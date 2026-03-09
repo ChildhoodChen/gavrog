@@ -6,9 +6,9 @@ import java.security.MessageDigest;
 
 public class RendererSelfCheck {
 	private static final String BACKENDS_PROPERTY =
-			"org.gavrog.3dt.hardware.backends";
+			"org.gavrog.3dt.opengl.backends";
 	private static final String DEFAULT_BACKENDS =
-			"de.jreality.jogl3.Viewer,de.jreality.jogl.Viewer";
+			"de.jreality.jogl3.Viewer";
 	private static final String[] NATIVE_LIBRARIES =
 			new String[] { "gluegen-rt", "jogl", "jogl_awt", "jogl_cg" };
 
@@ -110,7 +110,7 @@ public class RendererSelfCheck {
 
 		final String backendConfig =
 				System.getProperty(BACKENDS_PROPERTY, DEFAULT_BACKENDS);
-		System.out.println("configured.hardware.backends=" + backendConfig);
+		System.out.println("configured.opengl.backends=" + backendConfig);
 		final String[] backendClasses = backendConfig.split(",");
 		for (int i = 0; i < backendClasses.length; ++i) {
 			final String className = backendClasses[i].trim();
